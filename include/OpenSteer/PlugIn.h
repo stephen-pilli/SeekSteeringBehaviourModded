@@ -94,13 +94,6 @@ namespace OpenSteer {
         virtual void close (void) = 0;
         virtual void reset (void) = 0;
 
-        // return a pointer to this instance's character string name
-        virtual const char* name (void) = 0;
-
-        // numeric sort key used to establish user-visible PlugIn ordering
-        // ("built ins" have keys greater than 0 and less than 1)
-        virtual float selectionOrderSortKey (void) = 0;
-
         // allows a PlugIn to nominate itself as OpenSteerDemo's initially selected
         // (default) PlugIn, which is otherwise the first in "selection order"
         virtual bool requestInitialSelection (void) = 0;
@@ -151,12 +144,7 @@ namespace OpenSteer {
         // returns pointer to the next PlugIn in "selection order"
         PlugIn* next (void);
 
-        // format instance to characters for printing to stream
-        friend std::ostream& operator<< (std::ostream& os, PlugIn& pi)
-        {
-            os << "<PlugIn " << '"' << pi.name() << '"' << ">";
-            return os;
-        }
+
 
         // CLASS FUNCTIONS
 

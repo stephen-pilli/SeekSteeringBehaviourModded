@@ -152,7 +152,9 @@ namespace OpenSteer {
         Vec3 side     (void) const {return _side;};
         Vec3 up       (void) const {return _up;};
         Vec3 forward  (void) const {return _forward;};
-        Vec3 position (void) const {return _position;};
+        Vec3 position (void) const {
+            return _position;
+        };
         Vec3 setSide     (Vec3 s) {return _side = s;};
         Vec3 setUp       (Vec3 u) {return _up = u;};
         Vec3 setForward  (Vec3 f) {return _forward = f;};

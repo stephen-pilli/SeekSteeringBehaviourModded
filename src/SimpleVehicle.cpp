@@ -166,7 +166,6 @@ void
 OpenSteer::SimpleVehicle::applySteeringForce (const Vec3& force,
                                               const float elapsedTime)
 {
-
     const Vec3 adjustedForce = adjustRawSteeringForce (force, elapsedTime);
 
     // enforce limit on magnitude of steering force

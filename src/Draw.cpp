@@ -111,7 +111,6 @@ namespace {
                            const OpenSteer::Vec3& endPoint,
                            const OpenSteer::Color& color)
     {
-        OpenSteer::warnIfInUpdatePhase ("iDrawLine");
         glColor3f (color.r(), color.g(), color.b());
         glBegin (GL_LINES);
         glVertexVec3 (startPoint);
@@ -127,7 +126,6 @@ namespace {
                                const OpenSteer::Vec3& c,
                                const OpenSteer::Color& color)
     {
-        OpenSteer::warnIfInUpdatePhase ("iDrawTriangle");
         glColor3f (color.r(), color.g(), color.b());
         glBegin (GL_TRIANGLES);
         {
@@ -148,7 +146,6 @@ namespace {
                                  const OpenSteer::Vec3& d,
                                  const OpenSteer::Color& color)
     {
-        OpenSteer::warnIfInUpdatePhase ("iDrawQuadrangle");
         glColor3f (color.r(), color.g(), color.b());
         glBegin (GL_QUADS);
         {
@@ -223,25 +220,6 @@ OpenSteer::glVertexVec3 (const Vec3& v)
 
 
 
-
-// ----------------------------------------------------------------------------
-// warn when draw functions are called during OpenSteerDemo's update phase
-
-
-void 
-OpenSteer::warnIfInUpdatePhase2 (const char* name)
-{
-    std::ostringstream message;
-    message << "use annotation (during simulation update, do not call ";
-    message << name;
-    message << ")";
-    message << std::ends;
-    std::cerr << message.str();       // send message to cerr, let host app worry about where to redirect it
-}
-
-
-
-
 void 
 OpenSteer::drawLine (const Vec3& startPoint,
                      const Vec3& endPoint,
@@ -265,7 +243,6 @@ OpenSteer::drawLineAlpha (const Vec3& startPoint,
                           const Color& color,
                           const float alpha)
 {
-    warnIfInUpdatePhase ("drawLineAlpha");
     glColor4f (color.r(), color.g(), color.b(), alpha);
     glBegin (GL_LINES);
     OpenSteer::glVertexVec3 (startPoint);
@@ -313,7 +290,6 @@ OpenSteer::drawXZWideLine (const Vec3& startPoint,
                            const Color& color,
                            float width)
 {
-    warnIfInUpdatePhase ("drawXZWideLine");
 
     const Vec3 offset = endPoint - startPoint;
     const Vec3 along = offset.normalize();
@@ -448,7 +424,6 @@ OpenSteer::drawXZArc (const Vec3& start,
                       const int segments,
                       const Color& color)
 {
-    warnIfInUpdatePhase ("drawXZArc");
 
     // "spoke" is initially the vector from center to start,
     // it is then rotated around its tail
@@ -680,7 +655,6 @@ OpenSteer::drawXZLineGrid (const float size,
                            const Vec3& center,
                            const Color& color)
 {
-    warnIfInUpdatePhase ("drawXZLineGrid");
 
     const float half = size/2;
     const float spacing = size / subsquares;

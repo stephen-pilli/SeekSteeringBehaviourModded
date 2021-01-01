@@ -66,21 +66,10 @@ namespace OpenSteer {
     //
     // XXX perhaps this should be made to "melt away" when not in debug mode?
 
-    void warnIfInUpdatePhase2( const char* name);
-
     // hosting application must provide this bool. It's true when updating and not drawing,
     // false otherwise.
     // it has been externed as a first step in making the Draw library useful from
     // other applications besides OpenSteerDemo
-    extern bool updatePhaseActive;
-
-    inline void warnIfInUpdatePhase (const char* name)
-    {
-        if (updatePhaseActive)
-        {
-            warnIfInUpdatePhase2 (name);
-        }
-    }
 
     // ----------------------------------------------------------------------------
     // this is a typedef for a triangle draw routine which can be passed in
@@ -175,7 +164,6 @@ namespace OpenSteer {
                               const Color& color,
                               const int segments)
     {
-        warnIfInUpdatePhase ("drawXZCircle");
         drawXZCircleOrDisk (radius, center, color, segments, false);
     }
 
@@ -184,7 +172,6 @@ namespace OpenSteer {
                             const Color& color,
                             const int segments)
     {
-        warnIfInUpdatePhase ("drawXZDisk");
         drawXZCircleOrDisk (radius, center, color, segments, true);
     }
 
@@ -194,7 +181,6 @@ namespace OpenSteer {
                               const Color& color,
                               const int segments)
     {
-        warnIfInUpdatePhase ("draw3dCircle");
         draw3dCircleOrDisk (radius, center, axis, color, segments, false);
     }
 
@@ -204,7 +190,6 @@ namespace OpenSteer {
                             const Color& color,
                             const int segments)
     {
-        warnIfInUpdatePhase ("draw3dDisk");
         draw3dCircleOrDisk (radius, center, axis, color, segments, true);
     }
 

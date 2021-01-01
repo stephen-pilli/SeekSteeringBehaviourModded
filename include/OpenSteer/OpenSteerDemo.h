@@ -91,90 +91,8 @@ namespace OpenSteer {
         // main update function: step simulation forward and redraw scene
         static void updateSimulationAndRedraw (void);
 
-        // exit OpenSteerDemo with a given text message or error code
-        static void errorExit (const char* message);
-        static void exit (int exitCode);
-
-        // ------------------------------------------------------- PlugIn interface
-
-        // select the default PlugIn
-        static void selectDefaultPlugIn (void);
-        
-        // select the "next" plug-in, cycling through "plug-in selection order"
-        static void selectNextPlugIn (void);
-
-        // handle function keys an a per-plug-in basis
-        static void functionKeyForPlugIn (int keyNumber);
-
-        // return name of currently selected plug-in
-        static const char* nameOfSelectedPlugIn (void);
-
-        // open the currently selected plug-in
-        static void openSelectedPlugIn (void);
-
-        // do a simulation update for the currently selected plug-in
-        static void updateSelectedPlugIn (const float currentTime,
-                                          const float elapsedTime);
-
-        // redraw graphics for the currently selected plug-in
-        static void redrawSelectedPlugIn (const float currentTime,
-                                          const float elapsedTime);
-
-        // close the currently selected plug-in
-        static void closeSelectedPlugIn (void);
-
-        // reset the currently selected plug-in
-        static void resetSelectedPlugIn (void);
 
         static const AVGroup& allVehiclesOfSelectedPlugIn(void);
-
-        // ---------------------------------------------------- OpenSteerDemo phase
-
-        static bool phaseIsDraw     (void) {return phase == drawPhase;}
-        static bool phaseIsUpdate   (void) {return phase == updatePhase;}
-        static bool phaseIsOverhead (void) {return phase == overheadPhase;}
-
-        static float phaseTimerDraw     (void) {return phaseTimers[drawPhase];}
-        static float phaseTimerUpdate   (void) {return phaseTimers[updatePhase];}
-        // XXX get around shortcomings in current implementation, see note
-        // XXX in updateSimulationAndRedraw
-        //static float phaseTimerOverhead(void){return phaseTimers[overheadPhase];}
-        static float phaseTimerOverhead (void)
-        {
-            return (clock.getElapsedRealTime() -
-                    (phaseTimerDraw() + phaseTimerUpdate()));
-        }
-
-        // ------------------------------------------------------ delayed reset XXX
-
-        // XXX to be reconsidered
-        static void queueDelayedResetPlugInXXX (void);
-        static void doDelayedResetPlugInXXX (void);
-
-        // ------------------------------------------------------ vehicle selection
-
-        // select the "next" vehicle: cycle through the registry
-        static void selectNextVehicle (void);
-
-        // select vehicle nearest the given screen position (e.g.: of the mouse)
-        static void selectVehicleNearestScreenPosition (int x, int y);
-
-        // ---------------------------------------------------------- mouse support
-
-        // Find the AbstractVehicle whose screen position is nearest the
-        // current the mouse position.  Returns NULL if mouse is outside
-        // this window or if there are no AbstractVehicles.
-        static AbstractVehicle* vehicleNearestToMouse (void);
-
-        // Find the AbstractVehicle whose screen position is nearest the
-        // given window coordinates, typically the mouse position.  Note
-        // this will return NULL if there are no AbstractVehicles.
-        static AbstractVehicle* findVehicleNearestScreenPosition (int x, int y);
-
-        // for storing most recent mouse state
-        static int mouseX;
-        static int mouseY;
-        static bool mouseInWindow;
 
         // ------------------------------------------------------- camera utilities
 
@@ -216,90 +134,21 @@ namespace OpenSteer {
         // ground plane grid-drawing utility used by several plug-ins
         static void gridUtility (const Vec3& gridTarget);
 
-        // draws a gray disk on the XZ plane under a given vehicle
-        static void highlightVehicleUtility (const AbstractVehicle* vehicle);
-
-        // draws a gray circle on the XZ plane under a given vehicle
-        static void circleHighlightVehicleUtility (const AbstractVehicle* vehicle);
-
-        // draw a box around a vehicle aligned with its local space
-        // xxx not used as of 11-20-02
-        static void drawBoxHighlightOnVehicle (const AbstractVehicle* v,
-                                               const Color& color);
-
-        // draws a colored circle (perpendicular to view axis) around the center
-        // of a given vehicle.  The circle's radius is the vehicle's radius times
-        // radiusMultiplier.
-        static void drawCircleHighlightOnVehicle (const AbstractVehicle* v,
-                                                  const float radiusMultiplier,
-                                                  const Color& color);
-
-        // ----------------------------------------------------------- console text
-
-        // print a line on the console with "OpenSteerDemo: " then the given ending
-        static void printMessage (const char* message);
-        static void printMessage (const std::ostringstream& message);
-
-        // like printMessage but prefix is "OpenSteerDemo: Warning: "
-        static void printWarning (const char* message);
-        static void printWarning (const std::ostringstream& message);
-
-        // print list of known commands
-        static void keyboardMiniHelp (void);
-
-        // ---------------------------------------------------------------- private
-
-    private:
-        static int phase;
-        static int phaseStack[];
-        static int phaseStackIndex;
-        static float phaseTimers[];
-        static float phaseTimerBase;
-        static const int phaseStackSize;
-        static void pushPhase (const int newPhase);
-        static void popPhase (void);
-        static void initPhaseTimers (void);
-        static void updatePhaseTimers (void);
-
-        // XXX apparently MS VC6 cannot handle initialized static const members,
-        // XXX so they have to be initialized not-inline.
-        // static const int drawPhase = 2;
-        // static const int updatePhase = 1;
-        // static const int overheadPhase = 0;
-        static const int drawPhase;
-        static const int updatePhase;
-        static const int overheadPhase;
     };
 
     // ----------------------------------------------------------------------------
     // do all initialization related to graphics
-
-
     void initializeGraphics (int argc, char **argv);
-
-
     // ----------------------------------------------------------------------------
     // run graphics event loop
-
-
     void runGraphics (void);
-
-
+    void runGraphics_CV(void);
     // ----------------------------------------------------------------------------
     // accessors for GLUT's window dimensions
-
-
     float drawGetWindowHeight (void);
     float drawGetWindowWidth (void);
-
 } // namespace OpenSteer
-    
-    
 // ----------------------------------------------------------------------------
-
-
 #include "OpenSteer/Draw.h"
-
-
 // ----------------------------------------------------------------------------
 #endif // OPENSTEER_OPENSTEERDEMO_H

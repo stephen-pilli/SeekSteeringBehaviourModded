@@ -89,27 +89,6 @@ OpenSteer::PlugIn::next (void)
 
 
 // ----------------------------------------------------------------------------
-// search the class registry for a Plugin with the given name
-// returns NULL if none is found
-
-
-OpenSteer::PlugIn* 
-OpenSteer::PlugIn::findByName (const char* string)
-{
-    if (string)
-    {
-        for (int i = 0; i < itemsInRegistry; i++)
-        {
-            PlugIn& pi = *registry[i];
-            const char* s = pi.name();
-            if (s && (std::strcmp (string, s) == 0)) return &pi;
-        }
-    }
-    return NULL;
-}
-
-
-// ----------------------------------------------------------------------------
 // apply a given function to all PlugIns in the registry
 
 
@@ -186,6 +165,7 @@ OpenSteer::PlugIn::addToRegistry (void)
 {
     // save this instance in the registry
     registry[itemsInRegistry++] = this;
+//    std::cou<<this->name()<<std::endl;
 }
 
 

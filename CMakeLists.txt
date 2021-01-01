@@ -14,6 +14,7 @@ endif()
 
 # glfw
 set(GLFW_DIR "third-party/glfw")
+set(OPENCV_DIR "/usr/local/opencv")
 set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "Build the GLFW example programs")
 set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "Build the GLFW test programs")
 set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "Build the GLFW documentation")
@@ -28,51 +29,53 @@ set(OpenSteer_Headers
    include/OpenSteer/Color.h
    include/OpenSteer/Draw.h
    include/OpenSteer/LocalSpace.h
-   include/OpenSteer/lq.h
-   include/OpenSteer/Obstacle.h
-   include/OpenSteer/OldPathway.h
+#   include/OpenSteer/lq.h
+#   include/OpenSteer/Obstacle.h
+#   include/OpenSteer/OldPathway.h
    include/OpenSteer/OpenSteerDemo.h
-   include/OpenSteer/Path.h
+#   include/OpenSteer/Path.h
    include/OpenSteer/Pathway.h
-   include/OpenSteer/PlugIn.h
-   include/OpenSteer/PolylineSegmentedPath.h
-   include/OpenSteer/PolylineSegmentedPathwaySegmentRadii.h
-   include/OpenSteer/PolylineSegmentedPathwaySingleRadius.h
-   include/OpenSteer/Proximity.h
-   include/OpenSteer/QueryPathAlike.h
-   include/OpenSteer/QueryPathAlikeBaseDataExtractionPolicies.h
-   include/OpenSteer/QueryPathAlikeMappings.h
-   include/OpenSteer/QueryPathAlikeUtilities.h
-   include/OpenSteer/SegmentedPath.h
-   include/OpenSteer/SegmentedPathAlikeUtilities.h
-   include/OpenSteer/SegmentedPathway.h
-   include/OpenSteer/SharedPointer.h
+#   include/OpenSteer/PlugIn.h
+#   include/OpenSteer/PolylineSegmentedPath.h
+#   include/OpenSteer/PolylineSegmentedPathwaySegmentRadii.h
+#   include/OpenSteer/PolylineSegmentedPathwaySingleRadius.h
+#   include/OpenSteer/Proximity.h
+#   include/OpenSteer/QueryPathAlike.h
+#   include/OpenSteer/QueryPathAlikeBaseDataExtractionPolicies.h
+#   include/OpenSteer/QueryPathAlikeMappings.h
+#   include/OpenSteer/QueryPathAlikeUtilities.h
+#   include/OpenSteer/SegmentedPath.h
+#   include/OpenSteer/SegmentedPathAlikeUtilities.h
+#   include/OpenSteer/SegmentedPathway.h
+#   include/OpenSteer/SharedPointer.h
    include/OpenSteer/SimpleVehicle.h
    include/OpenSteer/StandardTypes.h
    include/OpenSteer/SteerLibrary.h
-   include/OpenSteer/UnusedParameter.h
+#   include/OpenSteer/UnusedParameter.h
    include/OpenSteer/Utilities.h
    include/OpenSteer/Vec3.h
-   include/OpenSteer/Vec3Utilities.h)
+   include/OpenSteer/Vec3Utilities.h
+   )
 
 set(OpenSteer_Sources
    src/Camera.cpp
    src/Clock.cpp
-   src/lq.c
-   src/Obstacle.cpp
-   src/OldPathway.cpp
-   src/Path.cpp
-   src/Pathway.cpp
-   src/PlugIn.cpp
-   src/PolylineSegmentedPath.cpp
-   src/PolylineSegmentedPathwaySegmentRadii.cpp
-   src/PolylineSegmentedPathwaySingleRadius.cpp
-   src/SegmentedPath.cpp
-   src/SegmentedPathway.cpp
+#   src/lq.c
+#   src/Obstacle.cpp
+#   src/OldPathway.cpp
+#   src/Path.cpp
+#   src/Pathway.cpp
+#   src/PlugIn.cpp
+#   src/PolylineSegmentedPath.cpp
+#   src/PolylineSegmentedPathwaySegmentRadii.cpp
+#   src/PolylineSegmentedPathwaySingleRadius.cpp
+#   src/SegmentedPath.cpp
+#   src/SegmentedPathway.cpp
    src/SimpleVehicle.cpp
-   src/TerrainRayTest.cpp
+#   src/TerrainRayTest.cpp
    src/Vec3.cpp
-   src/Vec3Utilities.cpp)
+   src/Vec3Utilities.cpp
+   )
 
 set(OpenSteer_Misc
    third-party/glfw/deps/glad.c
@@ -80,20 +83,25 @@ set(OpenSteer_Misc
    src/Draw.cpp
    src/Color.cpp
    src/main.cpp
-   src/TerrainRayTest.h
-   test/PolylineSegmentedPathTest.h
-   test/PolylineSegmentedPathwaySingleRadiusTest.h
-   test/SharedPointerTest.h
-   win32/resource.h
-   plugins/Boids.cpp
-   plugins/CaptureTheFlag.cpp
-   plugins/LowSpeedTurn.cpp
-   plugins/MapDrive.cpp
-   plugins/MultiplePursuit.cpp
-   plugins/OneTurning.cpp
-   plugins/Pedestrian.cpp
-   plugins/PedestriansWalkingAnEight.cpp
-   plugins/Soccer.cpp)
+
+#   src/TerrainRayTest.h
+#   test/PolylineSegmentedPathTest.h
+#   test/PolylineSegmentedPathwaySingleRadiusTest.h
+#   test/SharedPointerTest.h
+#   win32/resource.h
+#   plugins/Boids.cpp
+#   plugins/CaptureTheFlag.cpp
+#   plugins/LowSpeedTurn.cpp
+#   plugins/MapDrive.cpp
+
+#   plugins/MultiplePursuit.cpp
+
+#   plugins/OneTurning.cpp
+#   plugins/Pedestrian.cpp
+#   plugins/PedestriansWalkingAnEight.cpp
+#   plugins/Soccer.cpp
+
+)
 
 set(OpenSteer_Tests
    test/PolylineSegmentedPathTest.cpp
@@ -113,4 +121,12 @@ target_link_libraries(OpenSteerDemo OpenSteer::Lib)
 target_link_libraries(OpenSteerDemo "glfw" ${GLFW_LIBRARIES})
 target_include_directories(OpenSteerDemo PRIVATE ${GLFW_DIR}/include)
 target_include_directories(OpenSteerDemo PRIVATE ${GLFW_DIR}/deps)
+target_include_directories(OpenSteerDemo PRIVATE ${OPENCV_DIR}/include)
 target_compile_definitions(OpenSteerDemo PRIVATE "GLFW_INCLUDE_NONE")
+
+find_package( OpenCV REQUIRED )
+
+MESSAGE(STATUS "Include dirs ${OpenCV_INCLUDE_DIRS}")
+MESSAGE(STATUS "LINK LIBRARIES ${OpenCV_LIBS}")
+
+target_link_libraries(OpenSteerDemo ${OpenCV_LIBS})

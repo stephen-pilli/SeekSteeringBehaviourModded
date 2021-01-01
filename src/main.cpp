@@ -39,20 +39,23 @@
 #include "OpenSteer/OpenSteerDemo.h"        // OpenSteerDemo application
 #include "OpenSteer/Draw.h"                 // OpenSteerDemo graphics
 
+
 // To include EXIT_SUCCESS
 #include <cstdlib>
 
 
 int main (int argc, char **argv) 
 {
+
     // initialize OpenSteerDemo application
     OpenSteer::OpenSteerDemo::initialize ();
 
-    // initialize graphics
+//    // initialize graphics
     OpenSteer::initializeGraphics (argc, argv);
 
-    // run the main event processing loop
-    OpenSteer::runGraphics ();  
+//    // run the main event processing loop
+    OpenSteer::runGraphics ();
+//    OpenSteer::runGraphics_CV();
     return EXIT_SUCCESS;
 }
 

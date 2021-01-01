@@ -57,8 +57,6 @@
 namespace OpenSteer {
 
     extern bool enableAnnotation;
-    extern bool drawPhaseActive;
-
     // graphical annotation: master on/off switch
     inline bool annotationIsOn (void) {return enableAnnotation;}
     inline void setAnnotationOn (void) {enableAnnotation = true;}
@@ -388,14 +386,8 @@ OpenSteer::AnnotationMixin<Super>::annotationLine (const Vec3& startPoint,
 {
     if (enableAnnotation)
     {
-        if (drawPhaseActive)
-        {
             drawLine (startPoint, endPoint, color);
-        }
-        else
-        {
             deferredDrawLine (startPoint, endPoint, color);
-        }
     }
 }
 #else
@@ -425,16 +417,10 @@ OpenSteer::AnnotationMixin<Super>::annotationCircleOrDisk (const float radius,
 {
     if (enableAnnotation)
     {
-        if (drawPhaseActive)
-        {
             drawCircleOrDisk (radius, axis, center, color,
                               segments, filled, in3d);
-        }
-        else
-        {
             deferredDrawCircleOrDisk (radius, axis, center, color,
                                       segments, filled, in3d);
-        }
     }
 }
 #else

@@ -1017,6 +1017,8 @@ steerForPursuit (const AbstractVehicle& quarry,
     // estimated time until intercept of quarry
     const float et = directTravelTime * timeFactor;
 
+    std::cout<<maxPredictionTime<<std::endl;
+
     // xxx experiment, if kept, this limit should be an argument
     const float etl = (et > maxPredictionTime) ? maxPredictionTime : et;
 

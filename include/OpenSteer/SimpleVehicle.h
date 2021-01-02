@@ -205,12 +205,12 @@ namespace OpenSteer {
         int serialNumber;
         static int serialNumberCounter;
 
-        // draw lines from vehicle's position showing its velocity and acceleration
-        void annotationVelocityAcceleration (float maxLengthA, float maxLengthV);
-        void annotationVelocityAcceleration (float maxLength)
-            {annotationVelocityAcceleration (maxLength, maxLength);}
-        void annotationVelocityAcceleration (void)
-            {annotationVelocityAcceleration (3, 3);}
+//        // draw lines from vehicle's position showing its velocity and acceleration
+//        void annotationVelocityAcceleration (float maxLengthA, float maxLengthV);
+//        void annotationVelocityAcceleration (float maxLength)
+//            {annotationVelocityAcceleration (maxLength, maxLength);}
+//        void annotationVelocityAcceleration (void)
+//            {annotationVelocityAcceleration (3, 3);}
 
         // set a random "2D" heading: set local Up to global Y, then effectively
         // rotate about it by a random angle (pick random forward, derive side).

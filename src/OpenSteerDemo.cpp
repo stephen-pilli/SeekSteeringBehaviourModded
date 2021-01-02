@@ -42,8 +42,6 @@
 
 
 #include "OpenSteer/OpenSteerDemo.h"
-#include "OpenSteer/Annotation.h"
-#include "OpenSteer/Color.h"
 #include "OpenSteer/Vec3.h"
 
 #include <algorithm>
@@ -56,10 +54,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include "OpenSteer/SimpleVehicle.h"
+#include <opencv2/opencv.hpp>
 
 
 namespace {
@@ -77,7 +73,9 @@ class MpBase : public SimpleVehicle
 public:
 
     // constructor
-    MpBase () {reset ();}
+    MpBase () {
+        reset ();
+    }
 
     // reset state
     void reset (void)
@@ -87,18 +85,8 @@ public:
         setMaxForce (5.0);       // steering force is clipped to this magnitude
         setMaxSpeed (3.0);       // velocity is clipped to this magnitude
         clearTrailHistory ();    // prevent long streaks due to teleportation
-        gaudyPursuitAnnotation = true; // select use of 9-color annotation
     }
 
-    // draw into the scene
-    void draw (void)
-    {
-        drawBasic2dCircularVehicle (this, bodyColor);
-        drawTrail ();
-    }
-
-    // for draw method
-    Color bodyColor;
 };
 
 
@@ -107,19 +95,20 @@ class MpWanderer : public MpBase
 public:
 
     // constructor
-    MpWanderer () {reset ();}
+    MpWanderer () {
+        reset ();
+    }
 
     // reset state
     void reset (void)
     {
         MpBase::reset ();
-        bodyColor.set (0.4f, 0.6f, 0.4f); // greenish
     }
 
     // one simulation step
-    void update (const float elapsedTime)
+    void update (const float elapsedTime, Vec3 location)
     {
-        const Vec3 wander2d = steerForWander (elapsedTime).setYtoZero ();
+        const Vec3 wander2d = location;//steerForWander (elapsedTime).setYtoZero ();
         const Vec3 steer = forward() + (wander2d * 3);
         applySteeringForce (steer, elapsedTime);
     }
@@ -133,18 +122,20 @@ class MpPursuer : public MpBase
 public:
 
     // constructor
-    MpPursuer (MpWanderer* w) {wanderer = w; reset ();}
+    MpPursuer (MpWanderer* w) {
+        wanderer = w;
+        reset ();
+    }
 
     // reset state
     void reset (void)
     {
         MpBase::reset ();
-        bodyColor.set (0.6f, 0.4f, 0.4f); // redish
         randomizeStartingPositionAndHeading ();
     }
 
     // one simulation step
-    void update (const float elapsedTime)
+    void update (const float elapsedTime, Vec3 location)
     {
         // when pursuer touches quarry ("wanderer"), reset its position
         const float d = Vec3::distance (position(), wanderer->position());
@@ -152,6 +143,7 @@ public:
         if (d < r) reset ();
 
         const float maxTime = 20; // xxx hard-to-justify value
+
         applySteeringForce (steerForPursuit (*wanderer, maxTime), elapsedTime);
 
     }
@@ -215,43 +207,28 @@ public:
             allMP.push_back (new MpPursuer (wanderer));
         pBegin = allMP.begin() + 1;  // iterator pointing to first pursuer
         pEnd = allMP.end();          // iterator pointing to last pursuer
-
-        // initialize camera
-        OpenSteerDemo::selectedVehicle = wanderer;
-        OpenSteerDemo::camera.mode = Camera::cmStraightDown;
-        OpenSteerDemo::camera.fixedDistDistance = OpenSteerDemo::cameraTargetDistance;
-        OpenSteerDemo::camera.fixedDistVOffset = OpenSteerDemo::camera2dElevation;
     }
 
-    void update (const float elapsedTime)
+    void update_hero (const float elapsedTime, Vec3 location)
     {
         // update the wanderer
-        wanderer->update (elapsedTime);
+        wanderer->setPosition(location.x, location.y, location.z);
+        //        wanderer->update (elapsedTime, location);
+    }
+
+    void update_enemies(const float elapsedTime){
 
         // update each pursuer
         for (iterator i = pBegin; i != pEnd; i++)
         {
-            ((MpPursuer&) (**i)).update (elapsedTime);
+
+            ((MpPursuer&) (**i)).update (elapsedTime, Vec3(0,0,0));
         }
-    }
-
-    void redraw (const float currentTime, const float elapsedTime)
-    {
-        // selected vehicle (user can mouse click to select another)
-        AbstractVehicle* selected = OpenSteerDemo::selectedVehicle;
-
-        // update camera
-        OpenSteerDemo::updateCamera (currentTime, elapsedTime, selected);
-
-        // draw "ground plane"
-        OpenSteerDemo::gridUtility (selected->position());
-
-        // draw each vehicles
-        for (iterator i = allMP.begin(); i != pEnd; i++) (**i).draw ();
     }
 
     void close (void)
     {
+        std::cout<<std::endl;
         // delete wanderer, all pursuers, and clear list
         delete (wanderer);
         for (iterator i = pBegin; i != pEnd; i++) delete ((MpPursuer*)*i);
@@ -263,10 +240,6 @@ public:
         // reset wanderer and pursuers
         wanderer->reset ();
         for (iterator i = pBegin; i != pEnd; i++) ((MpPursuer&)(**i)).reset ();
-
-        // immediately jump to default camera position
-        OpenSteerDemo::camera.doNotSmoothNextMove ();
-        OpenSteerDemo::camera.resetLocalSpace ();
     }
 
     MpWanderer* getWanderer(void){
@@ -277,352 +250,165 @@ public:
 
 }
 
-
-
-GLFWwindow* demo_window = nullptr;
-// ----------------------------------------------------------------------------
-// keeps track of both "real time" and "simulation time"
-OpenSteer::Clock OpenSteer::OpenSteerDemo::clock;
-// ----------------------------------------------------------------------------
-// camera automatically tracks selected vehicle
-OpenSteer::Camera OpenSteer::OpenSteerDemo::camera;
-// ----------------------------------------------------------------------------
-//// currently selected plug-in (user can choose or cycle through them)
-//OpenSteer::PlugIn* OpenSteer::OpenSteerDemo::selectedPlugIn = NULL;
 // ----------------------------------------------------------------------------
 // currently selected vehicle.  Generally the one the camera follows and
 // for which additional information may be displayed.  Clicking the mouse
 // near a vehicle causes it to become the Selected Vehicle.
 OpenSteer::AbstractVehicle* OpenSteer::OpenSteerDemo::selectedVehicle = NULL;
-// ----------------------------------------------------------------------------
-// graphical annotation: master on/off switch
-bool OpenSteer::enableAnnotation = true;
 
 
-// ----------------------------------------------------------------------------
-// handler for window resizing
+MpPlugIn MpObj(8);
+float elapsedTime = 0.006;
+int world_size = 1000;
+float offset = (float)world_size/2;
+float multi = 20;
+int wanderer_size = 20;
+cv::Point Red, Green, Blue, White;
+cv::Mat WorldMat;
 
-void reshape( GLFWwindow* window, int width, int height )
-{
-    GLfloat h = (GLfloat) height / (GLfloat) width;
-    GLfloat xmax, znear, zfar;
 
-    znear = 1.0f;
-    zfar  = 400.0f;
-    xmax  = znear * 0.5f;
+void genWorld(cv::Mat & world_Mat){
 
-    glViewport( 0, 0, (GLint) width, (GLint) height );
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-    glFrustum( -xmax, xmax, -xmax*h, xmax*h, znear, zfar );
-    glMatrixMode( GL_MODELVIEW );
+    int rad = 20;
+    int thick = 50;
+    cv::circle(world_Mat, Red, rad, cv::Scalar(0,0,255), thick);
+    cv::circle(world_Mat, Green, rad, cv::Scalar(0,255,0), thick);
+    cv::circle(world_Mat, Blue, rad, cv::Scalar(255,0,0), thick);
+    cv::circle(world_Mat, White, rad, cv::Scalar(255,255,255), thick);
+
+
+}
+
+cv::Point getWorldPosition(Vec3 point){
+    return cv::Point(point.x*multi+offset, point.z*multi+offset);
+}
+
+Vec3 setPlayerPosition(MpPlugIn *mp, int x, int y){
+    mp->update_hero (elapsedTime, Vec3((x-offset)/multi, 0, (y-offset)/multi));
+}
+
+void killEnemy(){
+
 }
 
 
-MpPlugIn gMpPlugIn(8);
+void CallBackFunc(int event, int x, int y, int flags, void* userdata)
+{
+    if  ( event == cv::EVENT_LBUTTONDOWN )
+    {
+        std::cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << std::endl;
+        setPlayerPosition(&MpObj, Red.x, Red.y);
+    }
+    else if  ( event == cv::EVENT_RBUTTONDOWN )
+    {
+        std::cout << "Right button of the moue is clicked - position (" << x << ", " << y << ")" << std::endl;
+        setPlayerPosition(&MpObj, White.x, White.y);
+
+    }
+    else if  ( event == cv::EVENT_MBUTTONDOWN )
+    {
+        std::cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << std::endl;
+        setPlayerPosition(&MpObj, x, y);
+    }
+    else if ( event == cv::EVENT_MOUSEMOVE )
+    {
+        std::cout << "Mouse move over the window - position (" << x << ", " << y << ")" << std::endl;
+
+    }
+    else if ( event == cv::EVENT_MOUSEHWHEEL )
+    {
+
+        std::cout << "Mouse move over the window - position (" << x << ", " << y << ")" << std::endl;
+
+
+    }
+
+
+}
+
+
+void foo(){
+
+
+    // run selected PlugIn (with simulation's current time and step size)
+    // if no vehicle is selected, and some exist, select the first one
+    const AVGroup& vehicles = MpObj.allVehicles ();
+    if (vehicles.size() > 0) OpenSteer::OpenSteerDemo::selectedVehicle = vehicles.front();
+
+    //Update Enemies
+    MpObj.update_enemies(elapsedTime);
+
+    //Draw hero Position
+    cv::circle(WorldMat, cv::Point(getWorldPosition(MpObj.getWanderer()->position())), wanderer_size, cv::Scalar(0,255,0), 5);
+    //Draw Enemies position
+    for (int i = 1; i < vehicles.size() ; ++i){
+        Vec3 pos = vehicles[i]->position();
+        cv::circle(WorldMat, cv::Point(getWorldPosition(pos)), wanderer_size, cv::Scalar(0,0,255), 5);
+    }
+
+}
+
+
+
+
+void
+OpenSteer::run(void)
+{
+    while(true)
+    {
+        //INIT World
+        WorldMat = cv::Mat(world_size, world_size, CV_8UC3);
+        genWorld(WorldMat);
+
+        foo();
+
+        cv::imshow("Window", WorldMat);
+        WorldMat.deallocate();
+        char keypress = cv::waitKey(1);
+        Vec3 position = MpObj.getWanderer()->position();
+        if(keypress == 27){
+            break;
+        }else if (keypress == 'w') {
+            MpObj.getWanderer()->setPosition(position.x,0.f,position.z - 0.3);
+        }else if (keypress == 'a') {
+            MpObj.getWanderer()->setPosition(position.x - 0.3,0.f,position.z);
+
+        }else if (keypress == 's') {
+            MpObj.getWanderer()->setPosition(position.x,0.f,position.z + 0.3);
+
+        }else if (keypress == 'd') {
+            MpObj.getWanderer()->setPosition(position.x + 0.3,0.f,position.z);
+
+        }else if (keypress == 'q') {
+
+            setPlayerPosition(&MpObj, Green.x, Green.y);
+
+        }else if (keypress == 'e') {
+
+            setPlayerPosition(&MpObj, Blue.x, Blue.y);
+
+        }
+    }
+}
 
 void
 OpenSteer::OpenSteerDemo::initialize (void)
 {
+    Red = cv::Point(world_size*0.25, world_size*0.25);
+    Green = cv::Point(world_size*0.75, world_size*0.25);
+    Blue = cv::Point(world_size*0.25, world_size*0.75);
+    White= cv::Point(world_size*0.75, world_size*0.75);
 
-    //    selectedPlugIn = &gMpPlugIn;
-    camera.reset ();
+
+
+
     selectedVehicle = NULL;
-    gMpPlugIn.open ();
+    MpObj.open ();
 
-}
-// ----------------------------------------------------------------------------
-// main update function: step simulation forward and redraw scene
-void
-OpenSteer::OpenSteerDemo::updateSimulationAndRedraw (void)
-{
-    // update global simulation clock
-    clock.update ();
+    //set the callback function for any mouse event
+    cv::namedWindow("Window", 1);
+    cv::setMouseCallback("Window", CallBackFunc, NULL);
 
-    float currentTime = 0;//clock.getTotalSimulationTime();
-    float elapsedTime = 0.006;//clock.getElapsedSimulationTime();
-
-    // run selected PlugIn (with simulation's current time and step size)
-    // if no vehicle is selected, and some exist, select the first one
-    if (selectedVehicle == NULL)
-    {
-        const AVGroup& vehicles = gMpPlugIn.allVehicles ();
-        if (vehicles.size() > 0) selectedVehicle = vehicles.front();
-    }
-
-    // invoke selected PlugIn's Update method
-    gMpPlugIn.update (elapsedTime);
-
-    // redraw selected PlugIn (based on real time)
-    // invoke selected PlugIn's Draw method
-    gMpPlugIn.redraw (currentTime, elapsedTime);
-
-    // draw any annotation queued up during selected PlugIn's Update method
-    drawAllDeferredLines ();
-    drawAllDeferredCirclesOrDisks ();
-
-}
-
-
-
-// ------------------------------------------------------------------------
-// Main drawing function for OpenSteerDemo application,
-// drives simulation as a side effect
-
-
-void
-displayFunc (void)
-{
-    // clear color and depth buffers
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // run simulation and draw associated graphics
-    OpenSteer::OpenSteerDemo::updateSimulationAndRedraw ();
-
-    // double buffering, swap back and front buffers
-    glFlush ();
-}
-
-
-// ----------------------------------------------------------------------------
-// do all initialization related to graphics
-
-
-void
-OpenSteer::initializeGraphics (int argc, char **argv)
-{
-    if (!glfwInit())
-    {
-        fprintf( stderr, "Failed to initialize GLFW\n" );
-        exit( EXIT_FAILURE );
-    }
-
-    demo_window = glfwCreateWindow( 1200, 900, "OpenSteer", NULL, NULL );
-    if (!demo_window)
-    {
-        fprintf( stderr, "Failed to open GLFW window\n" );
-        glfwTerminate();
-        exit( EXIT_FAILURE );
-    }
-
-    // Set callback functions
-    glfwSetFramebufferSizeCallback(demo_window, reshape);
-
-    glfwMakeContextCurrent(demo_window);
-    gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
-    glfwSwapInterval( 1 );
-
-    int width, height;
-    glfwGetFramebufferSize(demo_window, &width, &height);
-    reshape(demo_window, width, height);
-}
-
-
-// ----------------------------------------------------------------------------
-// run graphics event loop
-
-#include <opencv2/opencv.hpp>
-
-void foo(){
-    float elapsedTime = 0.006;//clock.getElapsedSimulationTime();
-
-    // run selected PlugIn (with simulation's current time and step size)
-    // if no vehicle is selected, and some exist, select the first one
-    const AVGroup& vehicles = gMpPlugIn.allVehicles ();
-
-    if (vehicles.size() > 0) OpenSteer::OpenSteerDemo::selectedVehicle = vehicles.front();
-
-    gMpPlugIn.update (elapsedTime);
-    std::cout<<gMpPlugIn.getWanderer()->position()<<std::endl;
-
-    Vec3 point = gMpPlugIn.getWanderer()->position();
-
-    cv::Mat mat = cv::Mat(1000, 1000, CV_8UC3);
-
-    cv::circle(mat, cv::Point(point.x*10+500, point.z*10+500), 5, cv::Scalar(0,255,0));
-
-    for (int i = 1; i < vehicles.size() ; ++i){
-        Vec3 pos = vehicles[i]->position();
-        cv::circle(mat, cv::Point(pos.x*10+500, pos.z*10+500), 5, cv::Scalar(255,0,0));
-
-    }
-
-    cv::imshow("Window", mat);
-    mat.deallocate();
-    cv::waitKey(10);
-}
-
-void
-OpenSteer::runGraphics (void)
-{
-    cv::namedWindow("Window");
-
-    // Main loop
-    while( !glfwWindowShouldClose(demo_window) )
-    {
-        displayFunc();
-
-        foo();
-
-        // Swap buffers
-        glfwSwapBuffers(demo_window);
-        glfwPollEvents();
-
-    }
-    glfwTerminate();
-}
-
-
-
-void
-OpenSteer::runGraphics_CV (void)
-{
-
-    // Main loop
-    while(true)
-    {
-
-
-        cv::waitKey(30);
-
-        // invoke selected PlugIn's Update method
-
-
-    }
-}
-
-
-
-
-
-
-
-//CAM
-void
-OpenSteer::OpenSteerDemo::init3dCamera (AbstractVehicle& selected)
-{
-    init3dCamera (selected, cameraTargetDistance, camera2dElevation);
-}
-
-void
-OpenSteer::OpenSteerDemo::init3dCamera (AbstractVehicle& selected,
-                                        float distance,
-                                        float elevation)
-{
-    position3dCamera (selected, distance, elevation);
-    camera.fixedDistDistance = distance;
-    camera.fixedDistVOffset = elevation;
-    camera.mode = Camera::cmFixedDistanceOffset;
-}
-
-
-void
-OpenSteer::OpenSteerDemo::init2dCamera (AbstractVehicle& selected)
-{
-    init2dCamera (selected, cameraTargetDistance, camera2dElevation);
-}
-
-void
-OpenSteer::OpenSteerDemo::init2dCamera (AbstractVehicle& selected,
-                                        float distance,
-                                        float elevation)
-{
-    position2dCamera (selected, distance, elevation);
-    camera.fixedDistDistance = distance;
-    camera.fixedDistVOffset = elevation;
-    camera.mode = Camera::cmFixedDistanceOffset;
-}
-
-
-void
-OpenSteer::OpenSteerDemo::position3dCamera (AbstractVehicle& selected)
-{
-    position3dCamera (selected, cameraTargetDistance, camera2dElevation);
-}
-
-void
-OpenSteer::OpenSteerDemo::position3dCamera (AbstractVehicle& selected,
-                                            float distance,
-                                            float /*elevation*/)
-{
-    selectedVehicle = &selected;
-    if (&selected)
-    {
-        const Vec3 behind = selected.forward() * -distance;
-        camera.setPosition (selected.position() + behind);
-        camera.target = selected.position();
-    }
-}
-
-
-void
-OpenSteer::OpenSteerDemo::position2dCamera (AbstractVehicle& selected)
-{
-    position2dCamera (selected, cameraTargetDistance, camera2dElevation);
-}
-
-void
-OpenSteer::OpenSteerDemo::position2dCamera (AbstractVehicle& selected,
-                                            float distance,
-                                            float elevation)
-{
-    // position the camera as if in 3d:
-    position3dCamera (selected, distance, elevation);
-
-    // then adjust for 3d:
-    Vec3 position3d = camera.position();
-    position3d.y += elevation;
-    camera.setPosition (position3d);
-}
-
-
-// ----------------------------------------------------------------------------
-// camera updating utility used by several plug-ins
-
-
-void
-OpenSteer::OpenSteerDemo::updateCamera (const float currentTime,
-                                        const float elapsedTime,
-                                        const AbstractVehicle* selected)
-{
-    camera.vehicleToTrack = selected;
-    camera.update (currentTime, elapsedTime, clock.getPausedState ());
-}
-
-
-// ----------------------------------------------------------------------------
-// some camera-related default constants
-
-
-const float OpenSteer::OpenSteerDemo::camera2dElevation = 8;
-const float OpenSteer::OpenSteerDemo::cameraTargetDistance = 13;
-const OpenSteer::Vec3 OpenSteer::OpenSteerDemo::cameraTargetOffset (0, OpenSteer::OpenSteerDemo::camera2dElevation,
-                                                                    0);
-
-
-// ----------------------------------------------------------------------------
-// ground plane grid-drawing utility used by several plug-ins
-
-
-void
-OpenSteer::OpenSteerDemo::gridUtility (const Vec3& gridTarget)
-{
-    // round off target to the nearest multiple of 2 (because the
-    // checkboard grid with a pitch of 1 tiles with a period of 2)
-    // then lower the grid a bit to put it under 2d annotation lines
-    const Vec3 gridCenter ((round (gridTarget.x * 0.5f) * 2),
-                           (round (gridTarget.y * 0.5f) * 2) - .05f,
-                           (round (gridTarget.z * 0.5f) * 2));
-
-    // colors for checkboard
-    const Color gray1(0.27f);
-    const Color gray2(0.30f);
-
-    // draw 50x50 checkerboard grid with 50 squares along each side
-    drawXZCheckerboardGrid (50, 50, gridCenter, gray1, gray2);
-
-    // alternate style
-    // drawXZLineGrid (50, 50, gridCenter, gBlack);
 }
 
 

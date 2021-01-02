@@ -47,108 +47,31 @@
 #define OPENSTEER_OPENSTEERDEMO_H
 
 
-
-#include "OpenSteer/Clock.h"
-#include "OpenSteer/PlugIn.h"
-#include "OpenSteer/Camera.h"
+#include "OpenSteer/AbstractVehicle.h"
 #include "OpenSteer/Utilities.h"
 
 
 namespace OpenSteer {
 
-    class Color;
     class Vec3;
-    
 
     class OpenSteerDemo
     {
     public:
-        // ------------------------------------------------------ component objects
-
-        // clock keeps track of both "real time" and "simulation time"
-        static Clock clock;
-
-        // camera automatically tracks selected vehicle
-        static Camera camera;
-
-        // ------------------------------------------ addresses of selected objects
-
-        // currently selected plug-in (user can choose or cycle through them)
-        static PlugIn* selectedPlugIn;
 
         // currently selected vehicle.  Generally the one the camera follows and
         // for which additional information may be displayed.  Clicking the mouse
         // near a vehicle causes it to become the Selected Vehicle.
         static AbstractVehicle* selectedVehicle;
-
-        // -------------------------------------------- initialize, update and exit
-
-        // initialize OpenSteerDemo
-        //     XXX  if I switch from "totally static" to "singleton"
-        //     XXX  class structure this becomes the constructor
         static void initialize (void);
-
-        // main update function: step simulation forward and redraw scene
-        static void updateSimulationAndRedraw (void);
-
-
         static const AVGroup& allVehiclesOfSelectedPlugIn(void);
-
-        // ------------------------------------------------------- camera utilities
-
-        // set a certain initial camera state used by several plug-ins
-        static void init2dCamera (AbstractVehicle& selected);
-        static void init2dCamera (AbstractVehicle& selected,
-                                  float distance,
-                                  float elevation);
-        static void init3dCamera (AbstractVehicle& selected);
-        static void init3dCamera (AbstractVehicle& selected,
-                                  float distance,
-                                  float elevation);
-
-        // set initial position of camera based on a vehicle
-        static void position3dCamera (AbstractVehicle& selected);
-        static void position3dCamera (AbstractVehicle& selected,
-                                      float distance,
-                                      float elevation);
-        static void position2dCamera (AbstractVehicle& selected);
-        static void position2dCamera (AbstractVehicle& selected,
-                                      float distance,
-                                      float elevation);
-
-        // camera updating utility used by several (all?) plug-ins
-        static void updateCamera (const float currentTime,
-                                  const float elapsedTime,
-                                  const AbstractVehicle* selected);
-
-        // some camera-related default constants
-        static const float camera2dElevation;
-        static const float cameraTargetDistance;
-        static const Vec3 cameraTargetOffset;
-
-        // ------------------------------------------------ graphics and annotation
-
-        // do all initialization related to graphics
-        static void initializeGraphics (void);
-
-        // ground plane grid-drawing utility used by several plug-ins
-        static void gridUtility (const Vec3& gridTarget);
 
     };
 
     // ----------------------------------------------------------------------------
-    // do all initialization related to graphics
-    void initializeGraphics (int argc, char **argv);
-    // ----------------------------------------------------------------------------
     // run graphics event loop
-    void runGraphics (void);
-    void runGraphics_CV(void);
-    // ----------------------------------------------------------------------------
-    // accessors for GLUT's window dimensions
-    float drawGetWindowHeight (void);
-    float drawGetWindowWidth (void);
+    void run(void);
+
 } // namespace OpenSteer
-// ----------------------------------------------------------------------------
-#include "OpenSteer/Draw.h"
 // ----------------------------------------------------------------------------
 #endif // OPENSTEER_OPENSTEERDEMO_H

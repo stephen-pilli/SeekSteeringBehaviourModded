@@ -48,10 +48,6 @@
 
 namespace OpenSteer {
 
-    
-    // Forward declaration.
-    class Color;
-    
 
     // ----------------------------------------------------------------------------
     // AbstractObstacle: a pure virtual base class for an abstract shape in
@@ -94,14 +90,6 @@ namespace OpenSteer {
         virtual void
         findIntersectionWithVehiclePath (const AbstractVehicle& vehicle,
                                          PathIntersection& pi)
-            const
-            = 0 ;
-
-        // virtual function for drawing -- normally does nothing, can be
-        // specialized by derived types to provide graphics for obstacles
-        virtual void draw (const bool filled,
-                           const Color& color,
-                           const Vec3& viewpoint)
             const
             = 0 ;
 
@@ -152,8 +140,6 @@ namespace OpenSteer {
                                                 PathIntersection& nearest,
                                                 PathIntersection& next);
 
-        // default do-nothing draw function (derived class can overload this)
-        void draw (const bool, const Color&, const Vec3&) const {}
 
         seenFromState seenFrom (void) const {return _seenFrom;}
         void setSeenFrom (seenFromState s) {_seenFrom = s;}

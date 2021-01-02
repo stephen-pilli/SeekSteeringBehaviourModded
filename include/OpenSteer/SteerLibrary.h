@@ -52,8 +52,6 @@
 #include "OpenSteer/Obstacle.h"
 #include "OpenSteer/Utilities.h"
 
-// Include OpenSteer::Color, OpenSteer::gBlack, ...
-#include "Color.h"
 
 namespace OpenSteer {
 
@@ -353,7 +351,7 @@ OpenSteer::Vec3
 OpenSteer::SteerLibraryMixin<Super>::
 steerForFlee (const Vec3& target)
 {
-    const Vec3 desiredVelocity = position - target;
+    const Vec3 desiredVelocity = this->position() - target;
     return desiredVelocity - velocity();
 }
 
@@ -954,7 +952,6 @@ steerForPursuit (const AbstractVehicle& quarry,
     const int p = intervalComparison (parallelness, -0.707f, 0.707f);
 
     float timeFactor = 0; // to be filled in below
-    Color color;           // to be filled in below (xxx just for debugging)
 
     // Break the pursuit into nine cases, the cross product of the
     // quarry being [ahead, aside, or behind] us and heading
@@ -966,15 +963,12 @@ steerForPursuit (const AbstractVehicle& quarry,
         {
         case +1:          // ahead, parallel
             timeFactor = 4;
-            color = gBlack;
             break;
         case 0:           // ahead, perpendicular
             timeFactor = 1.8f;
-            color = gGray50;
             break;
         case -1:          // ahead, anti-parallel
             timeFactor = 0.85f;
-            color = gWhite;
             break;
         }
         break;
@@ -983,15 +977,12 @@ steerForPursuit (const AbstractVehicle& quarry,
         {
         case +1:          // aside, parallel
             timeFactor = 1;
-            color = gRed;
             break;
         case 0:           // aside, perpendicular
             timeFactor = 0.8f;
-            color = gYellow;
             break;
         case -1:          // aside, anti-parallel
             timeFactor = 4;
-            color = gGreen;
             break;
         }
         break;
@@ -1000,15 +991,12 @@ steerForPursuit (const AbstractVehicle& quarry,
         {
         case +1:          // behind, parallel
             timeFactor = 0.5f;
-            color= gCyan;
             break;
         case 0:           // behind, perpendicular
             timeFactor = 2;
-            color= gBlue;
             break;
         case -1:          // behind, anti-parallel
             timeFactor = 2;
-            color = gMagenta;
             break;
         }
         break;
@@ -1017,18 +1005,16 @@ steerForPursuit (const AbstractVehicle& quarry,
     // estimated time until intercept of quarry
     const float et = directTravelTime * timeFactor;
 
-    std::cout<<maxPredictionTime<<std::endl;
-
     // xxx experiment, if kept, this limit should be an argument
     const float etl = (et > maxPredictionTime) ? maxPredictionTime : et;
 
     // estimated position of quarry at intercept
     const Vec3 target = quarry.predictFuturePosition (etl);
 
-    // annotation
-    this->annotationLine (position(),
-                          target,
-                          gaudyPursuitAnnotation ? color : gGray40);
+//    // annotation
+//    this->annotationLine (position(),
+//                          target,
+//                          gaudyPursuitAnnotation ? color : gGray40);
 
     return steerForSeek (target);
 }
@@ -1044,7 +1030,7 @@ steerForEvasion (const AbstractVehicle& menace,
                  const float maxPredictionTime)
 {
     // offset from this to menace, that distance, unit vector toward menace
-    const Vec3 offset = this->menace.position - position;
+    const Vec3 offset = menace.position() - this->position();
     const float distance = offset.length ();
 
     const float roughTime = distance / menace.speed();
